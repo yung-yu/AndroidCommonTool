@@ -50,7 +50,7 @@ public class PermissionManager {
 		deniedLists.clear();
 		this.callBack = callBack;
 		for(String p: permissions) {
-			if(!PermissionUtil.checkPermission(activity, p)){
+			if(!checkPermission(activity, p)){
 				deniedLists.add(p);
 			}
 		}
@@ -119,5 +119,18 @@ public class PermissionManager {
 		});
 		ab.create().show();
 	}
+	public  boolean checkPermissions(Context context, String[] permissions){
+		if(permissions != null && permissions.length > 0) {
+			for(String p: permissions) {
+				if(!checkPermission(context, p)){
+					return false;
+				}
+			}
+		}
+		return true;
+	}
 
+	public boolean checkPermission(Context context, String p){
+		return ContextCompat.checkSelfPermission(context, p) == PackageManager.PERMISSION_GRANTED;
+	}
 }

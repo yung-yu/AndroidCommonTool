@@ -1,1 +1,1 @@
-include ':app', ':andoridcommontools'
+include ':app', ':andoridcommontools', ':googletoolsmodule'
