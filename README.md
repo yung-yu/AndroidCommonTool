@@ -1,0 +1,4 @@
+# AndroidCommonTool
+Android開發常用工具整理
+
+平常開發用的常用的方法和library會陸續整理到這個專案
