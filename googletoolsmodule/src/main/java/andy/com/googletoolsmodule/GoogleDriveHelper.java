@@ -2,6 +2,7 @@ package andy.com.googletoolsmodule;
 
 
 import android.Manifest;
+import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.Activity;
 import android.content.Context;
@@ -10,6 +11,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentActivity;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -39,6 +41,9 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+
+import andy.android.manager.PermissionManager;
+import taiwanmobile.com.googletoolsmodule.R;
 
 /**
  * Google Drive 使用
@@ -184,8 +189,8 @@ public class GoogleDriveHelper {
 	private GoogleSignInAccount getGoogleAccount(Context context) {
 		GoogleSignInAccount googleSignInAccount = GoogleSignIn.getLastSignedInAccount(context);
 		if (googleSignInAccount != null) {
-			if (PermissionUtil.checkPermission(context, Manifest.permission.GET_ACCOUNTS)) {
-				if (Tools.checkGoogleAccountIsExist(context, googleSignInAccount.getEmail())) {
+			if (PermissionManager.getInstance().checkPermission(context, Manifest.permission.GET_ACCOUNTS)) {
+				if (checkGoogleAccountIsExist(context, googleSignInAccount.getEmail())) {
 					return googleSignInAccount;
 				} else {
 					return null;
@@ -193,6 +198,19 @@ public class GoogleDriveHelper {
 			}
 		}
 		return googleSignInAccount;
+	}
+
+	private boolean checkGoogleAccountIsExist(Context context, String email){
+		AccountManager accountManager = AccountManager.get(context);
+		Account[] accounts = accountManager.getAccountsByType("gmail.com");
+		if (accounts != null && accounts.length > 0){
+			for (Account account:accounts){
+				if(account.name.equals(email)){
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -335,7 +353,7 @@ public class GoogleDriveHelper {
 				return completedTask.getResult(ApiException.class);
 			}
 		} catch (ApiException e) {
-			Log.e(e);
+			e.printStackTrace();
 			Log.w(TAG, "signInResult:failed code=" + e.getStatusCode());
 		}
 		ApiException exception = (ApiException) completedTask.getException();
@@ -359,7 +377,7 @@ public class GoogleDriveHelper {
 				super.run();
 				Drive drive = getDriveService(context);
 				if(drive == null){
-					listener.onFailed("");
+					listener.onFailed();
 					return;
 				}
 				File fileMetadata = new File();
@@ -384,9 +402,7 @@ public class GoogleDriveHelper {
 									Log.d(TAG, "INITIATION_COMPLETE");
 									break;
 								case MEDIA_IN_PROGRESS:
-									if(Log.IS_DEBUG) {
-										Log.d(TAG, "MEDIA_IN_PROGRESS " + uploader.getProgress());
-									}
+
 									listener.onProgress((int) (uploader.getProgress() * 100f));
 									break;
 								case MEDIA_COMPLETE:
@@ -395,15 +411,12 @@ public class GoogleDriveHelper {
 									break;
 								case NOT_STARTED:
 									Log.d(TAG, "NOT_STARTED");
-									listener.onFailed(context.getString(R.string.google_backup_failed));
+									listener.onFailed();
 									break;
 							}
 						}
 					});
 					File file = create.execute();
-					if(Log.IS_DEBUG) {
-						Log.d(TAG, " upload success " + file.getId());
-					}
 					try {
 						//刪除歷史檔案
 						FileList fileResult = drive.files().list()
@@ -422,11 +435,11 @@ public class GoogleDriveHelper {
 							}
 						}
 					} catch (Exception e){
-						Log.e(e);
+						e.printStackTrace();
 					}
 					listener.onSuccess();
 				} catch (Exception e) {
-					Log.e(e);
+					e.printStackTrace();
 					if(e instanceof GoogleJsonResponseException){
 						GoogleJsonResponseException jsonResponseException = (GoogleJsonResponseException) e;
 						if(jsonResponseException.getDetails().getCode() == 403){
@@ -484,7 +497,7 @@ public class GoogleDriveHelper {
 						listener.onFailed();
 					}
 				} catch (Exception e) {
-					Log.e(e);
+					e.printStackTrace();
 					listener.onFailed();
 				}
 
@@ -514,7 +527,7 @@ public class GoogleDriveHelper {
 					List<File> data = result.getFiles();
 					listener.onResult(data != null && data.size() > 0);
 				} catch (Exception e) {
-					Log.e(e);
+					e.printStackTrace();
 					listener.onResult(false);
 				}
 
@@ -549,10 +562,6 @@ public class GoogleDriveHelper {
 						File file = data.get(0);
 						long restoreFileSize = file.getSize();
 						long free = context.getCacheDir().getFreeSpace();
-						if (Log.IS_DEBUG) {
-							Log.d(TAG, "file size " + restoreFileSize);
-							Log.d(TAG, "free space " + free);
-						}
 						if (restoreFileSize  > free) {
 							listener.onFailed();
 							return;
@@ -613,7 +622,7 @@ public class GoogleDriveHelper {
 						listener.onFailed();
 					}
 				} catch (Exception e) {
-					Log.e(e);
+
 					if (listener.isCancel()) {
 						listener.onCancel();
 					} else {
@@ -644,7 +653,7 @@ public class GoogleDriveHelper {
 					List<File> data = result.getFiles();
 					listener.onResult(data);
 				} catch (Exception e) {
-					Log.e(e);
+					e.printStackTrace();
 					listener.onResult(null);
 				}
 
@@ -675,7 +684,7 @@ public class GoogleDriveHelper {
 						listener.onSuccess();
 					}
 				} catch (Exception e) {
-					Log.e(e);
+					e.printStackTrace();
 					listener.onFailed();
 				}
 			}
