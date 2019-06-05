@@ -43,7 +43,7 @@ import java.util.List;
 import java.util.Map;
 
 import andy.android.manager.PermissionManager;
-import taiwanmobile.com.googletoolsmodule.R;
+import com.googletoolsmodule.R;
 
 /**
  * Google Drive 使用
