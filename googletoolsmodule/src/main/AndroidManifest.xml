@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-	package="taiwanmobile.com.googletoolsmodule" >
+	package="com.googletoolsmodule" >
 
 	<uses-permission
 		android:name="android.permission.GET_ACCOUNTS"
